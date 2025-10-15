@@ -1,0 +1,69 @@
+Question 17: Show the start and end date in the date picker. But the end date should be 29 days ago from the start date. What will be your approach to getting this problem statement?
+Hint 1:- Use the date picker library for selecting the start and end date.
+Hint 2:- Add the logic which is end data should be 29 days ago from the start date.
+
+Source Code :
+import 'package:flutter/material.dart';
+
+class DatePickerExample extends StatefulWidget {
+  const DatePickerExample({super.key});
+
+  @override
+  State<DatePickerExample> createState() => _DatePickerExampleState();
+}
+
+class _DatePickerExampleState extends State<DatePickerExample> {
+  DateTime? startDate;
+  DateTime? endDate;
+
+  Future<void> _selectStartDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (picked != null) {
+      setState(() {
+        startDate = picked;
+        endDate = picked.subtract(const Duration(days: 29));
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Date Picker Example"),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () => _selectStartDate(context),
+              child: const Text("Select Start Date"),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              startDate != null
+                  ? "Start Date: ${startDate!.toLocal()}".split(' ')[0]
+                  : "No start date selected",
+              style: const TextStyle(fontSize: 18),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              endDate != null
+                  ? "End Date (29 days ago): ${endDate!.toLocal()}".split(' ')[0]
+                  : "End date not calculated",
+              style: const TextStyle(fontSize: 18, color: Colors.green),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
