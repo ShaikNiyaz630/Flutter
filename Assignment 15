@@ -1,0 +1,73 @@
+Question 20: Is there any way to rotate an image clock clockwise and anti-clockwise by clicking on a single button?
+Hint 1:- Use RotationTransition widget for rotation purposes.
+Hint 2:- Add a button for controlling image rotation. 
+Source Code :
+import 'package:flutter/material.dart';
+
+class RotateImageExample extends StatefulWidget {
+  const RotateImageExample({super.key});
+
+  @override
+  State<RotateImageExample> createState() => _RotateImageExampleState();
+}
+
+class _RotateImageExampleState extends State<RotateImageExample>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  bool isClockwise = true; // toggle flag
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+      lowerBound: 0,
+      upperBound: 1,
+    );
+  }
+
+  void _rotateImage() {
+    setState(() {
+      if (isClockwise) {
+        _controller.forward(from: 0); // rotate clockwise
+      } else {
+        _controller.reverse(from: 1); // rotate anti-clockwise
+      }
+      isClockwise = !isClockwise; // toggle direction
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Rotate Image")),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            RotationTransition(
+              turns: _controller,
+              child: Image.asset(
+                'assets/flutter_logo.png', // Replace with your image
+                width: 150,
+                height: 150,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _rotateImage,
+              child: const Text("Rotate Image"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
