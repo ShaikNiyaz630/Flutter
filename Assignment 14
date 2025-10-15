@@ -1,0 +1,91 @@
+Question 19: Create the form which consists firstName, lastName, phoneNumber, email, and all scenarios mentioned below:-
+● firstName and lastName should be a minimum character of 5 and a maximum of 15.
+● Add proper validation for email.
+● phoneNumber should be 10 digits and valid.
+How will you achieve this problem statement?
+Hint 1:- Only use FormBuilderTextField. 
+
+Source Code :
+import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+
+class UserForm extends StatefulWidget {
+  const UserForm({super.key});
+
+  @override
+  State<UserForm> createState() => _UserFormState();
+}
+
+class _UserFormState extends State<UserForm> {
+  final _formKey = GlobalKey<FormBuilderState>();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("User Form")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: FormBuilder(
+          key: _formKey,
+          child: Column(
+            children: [
+              FormBuilderTextField(
+                name: 'firstName',
+                decoration: const InputDecoration(labelText: 'First Name'),
+                validator: FormBuilderValidators.compose([
+                  FormBuilderValidators.required(),
+                  FormBuilderValidators.minLength(5),
+                  FormBuilderValidators.maxLength(15),
+                ]),
+              ),
+              const SizedBox(height: 15),
+              FormBuilderTextField(
+                name: 'lastName',
+                decoration: const InputDecoration(labelText: 'Last Name'),
+                validator: FormBuilderValidators.compose([
+                  FormBuilderValidators.required(),
+                  FormBuilderValidators.minLength(5),
+                  FormBuilderValidators.maxLength(15),
+                ]),
+              ),
+              const SizedBox(height: 15),
+              FormBuilderTextField(
+                name: 'email',
+                decoration: const InputDecoration(labelText: 'Email'),
+                validator: FormBuilderValidators.compose([
+                  FormBuilderValidators.required(),
+                  FormBuilderValidators.email(),
+                ]),
+              ),
+              const SizedBox(height: 15),
+              FormBuilderTextField(
+                name: 'phoneNumber',
+                decoration: const InputDecoration(labelText: 'Phone Number'),
+                keyboardType: TextInputType.phone,
+                validator: FormBuilderValidators.compose([
+                  FormBuilderValidators.required(),
+                  FormBuilderValidators.match(r'^[0-9]{10}$',
+                      errorText: "Enter a valid 10-digit phone number"),
+                ]),
+              ),
+              const SizedBox(height: 25),
+              ElevatedButton(
+                onPressed: () {
+                  if (_formKey.currentState!.saveAndValidate()) {
+                    final formData = _formKey.currentState!.value;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Form Submitted: $formData"),
+                      ),
+                    );
+                  }
+                },
+                child: const Text('Submit'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
