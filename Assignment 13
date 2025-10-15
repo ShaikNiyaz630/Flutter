@@ -1,0 +1,62 @@
+Question 18: Create a clock. What will be your approach to solving this problem statement?
+Hint 1:- Use flutter inbuilt library
+Hint 2:- Use only a timer.
+Hint 3:- Clock runs only for 1 sec.
+Source Code :
+import 'dart:async';
+import 'package:flutter/material.dart';
+
+class ClockExample extends StatefulWidget {
+  const ClockExample({super.key});
+
+  @override
+  State<ClockExample> createState() => _ClockExampleState();
+}
+
+class _ClockExampleState extends State<ClockExample> {
+  late String currentTime;
+  Timer? timer;
+
+  @override
+  void initState() {
+    super.initState();
+    currentTime = _formatCurrentTime();
+
+    // Timer runs every 1 second
+    timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
+      setState(() {
+        currentTime = _formatCurrentTime();
+      });
+    });
+  }
+
+  String _formatCurrentTime() {
+    final now = DateTime.now();
+    return "${now.hour.toString().padLeft(2, '0')}:"
+           "${now.minute.toString().padLeft(2, '0')}:"
+           "${now.second.toString().padLeft(2, '0')}";
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel(); // Stop timer when widget is disposed
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Clock Example")),
+      body: Center(
+        child: Text(
+          currentTime,
+          style: const TextStyle(
+            fontSize: 50,
+            fontWeight: FontWeight.bold,
+            color: Colors.blueAccent,
+          ),
+        ),
+      ),
+    );
+  }
+}
