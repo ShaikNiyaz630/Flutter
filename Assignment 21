@@ -1,0 +1,58 @@
+Question 07: Build a Flutter application where pressing a button will change the color of all text widgets within the application.  
+Source Code :
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  // Default text color
+  Color textColor = Colors.black;
+
+  // Method to change text color randomly
+  void changeTextColor() {
+    setState(() {
+      textColor = Color((0xFFFFFFFF & (0xFF000000 + (0x00FFFFFF & DateTime.now().millisecondsSinceEpoch))) | 0xFF000000);
+      // Alternative: Use random color
+      // textColor = Colors.primaries[Random().nextInt(Colors.primaries.length)];
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text("Change Text Color", style: TextStyle(color: textColor)),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "Hello World!",
+                style: TextStyle(fontSize: 24, color: textColor),
+              ),
+              SizedBox(height: 20),
+              Text(
+                "Welcome to Flutter",
+                style: TextStyle(fontSize: 24, color: textColor),
+              ),
+              SizedBox(height: 40),
+              ElevatedButton(
+                onPressed: changeTextColor,
+                child: Text("Change Text Color"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
