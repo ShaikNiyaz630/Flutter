@@ -1,0 +1,85 @@
+Question 24: You have two buttons A & B . When you click on the A button the image will be shown and you click on the B button then your name, phone number, and email will be shown. How will you achieve this problem statement?
+Hint 1:- Add the flag to show the different-2 data on click of buttons.
+Hint 2:- Add text in the column for showing the name, phone number, and email.
+Hint 3:- Add imageView to show the image.
+Hint 4:- Add the image to the assets folder.
+
+Source Code :
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: DisplayScreen(),
+    );
+  }
+}
+
+class DisplayScreen extends StatefulWidget {
+  @override
+  _DisplayScreenState createState() => _DisplayScreenState();
+}
+
+class _DisplayScreenState extends State<DisplayScreen> {
+  bool showImage = false; // Flag to track what to show
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Button Content Display"),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Conditionally show image or text
+            showImage
+                ? Image.asset(
+                    'assets/my_image.png',
+                    width: 200,
+                    height: 200,
+                  )
+                : Column(
+                    children: [
+                      Text("Name: John Doe", style: TextStyle(fontSize: 20)),
+                      Text("Phone: +91 1234567890",
+                          style: TextStyle(fontSize: 20)),
+                      Text("Email: john@example.com",
+                          style: TextStyle(fontSize: 20)),
+                    ],
+                  ),
+            SizedBox(height: 40),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      showImage = true; // Show image
+                    });
+                  },
+                  child: Text("Button A"),
+                ),
+                SizedBox(width: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      showImage = false; // Show text info
+                    });
+                  },
+                  child: Text("Button B"),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
