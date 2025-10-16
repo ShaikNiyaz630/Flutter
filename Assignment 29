@@ -1,0 +1,73 @@
+Question 5: How to move a widget from the top left corner to the right bottom corner by clicking on a button?
+Hint 1:- Use an image widget or container.
+Hint 2:- Use Align widget for moving.
+
+Source Code :
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MoveWidgetApp());
+}
+
+class MoveWidgetApp extends StatelessWidget {
+  const MoveWidgetApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: MoveWidgetScreen(),
+    );
+  }
+}
+
+class MoveWidgetScreen extends StatefulWidget {
+  const MoveWidgetScreen({super.key});
+
+  @override
+  State<MoveWidgetScreen> createState() => _MoveWidgetScreenState();
+}
+
+class _MoveWidgetScreenState extends State<MoveWidgetScreen> {
+  Alignment currentAlignment = Alignment.topLeft; // initial position
+
+  void moveWidget() {
+    setState(() {
+      // Toggle between topLeft and bottomRight
+      currentAlignment = (currentAlignment == Alignment.topLeft)
+          ? Alignment.bottomRight
+          : Alignment.topLeft;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Move Widget Example'),
+        centerTitle: true,
+      ),
+      body: Stack(
+        children: [
+          AnimatedAlign(
+            alignment: currentAlignment,
+            duration: const Duration(seconds: 2),
+            curve: Curves.easeInOut,
+            child: Container(
+              height: 80,
+              width: 80,
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: moveWidget,
+        child: const Icon(Icons.play_arrow),
+      ),
+    );
+  }
+}
