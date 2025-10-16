@@ -1,0 +1,153 @@
+Question 2: Create an alertDialog form with name, last name, email, and phone number and store all data in shared preferences and show it in UI after submitting the data. What will be your approach to solving this problem statement?
+Hint 1:- Use the alert dialog box and textformfield.
+Hint 2:- Use the shared preferences library to store the data of all fields.
+
+Source Code :
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: UserFormScreen(),
+    );
+  }
+}
+
+class UserFormScreen extends StatefulWidget {
+  const UserFormScreen({super.key});
+
+  @override
+  State<UserFormScreen> createState() => _UserFormScreenState();
+}
+
+class _UserFormScreenState extends State<UserFormScreen> {
+  String name = '';
+  String lastName = '';
+  String email = '';
+  String phone = '';
+
+  @override
+  void initState() {
+    super.initState();
+    loadUserData(); // Load saved data on startup
+  }
+
+  Future<void> loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      name = prefs.getString('name') ?? '';
+      lastName = prefs.getString('lastName') ?? '';
+      email = prefs.getString('email') ?? '';
+      phone = prefs.getString('phone') ?? '';
+    });
+  }
+
+  Future<void> showUserFormDialog() async {
+    final nameController = TextEditingController();
+    final lastNameController = TextEditingController();
+    final emailController = TextEditingController();
+    final phoneController = TextEditingController();
+
+    final formKey = GlobalKey<FormState>();
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Enter User Details'),
+        content: Form(
+          key: formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'First Name'),
+                  validator: (value) =>
+                      value!.isEmpty ? 'Enter first name' : null,
+                ),
+                TextFormField(
+                  controller: lastNameController,
+                  decoration: const InputDecoration(labelText: 'Last Name'),
+                  validator: (value) =>
+                      value!.isEmpty ? 'Enter last name' : null,
+                ),
+                TextFormField(
+                  controller: emailController,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                  validator: (value) =>
+                      value!.isEmpty ? 'Enter email' : null,
+                ),
+                TextFormField(
+                  controller: phoneController,
+                  decoration: const InputDecoration(labelText: 'Phone'),
+                  validator: (value) =>
+                      value!.isEmpty ? 'Enter phone number' : null,
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                SharedPreferences prefs =
+                    await SharedPreferences.getInstance();
+                await prefs.setString('name', nameController.text);
+                await prefs.setString('lastName', lastNameController.text);
+                await prefs.setString('email', emailController.text);
+                await prefs.setString('phone', phoneController.text);
+
+                Navigator.pop(context);
+                loadUserData(); // Refresh UI
+              }
+            },
+            child: const Text('Submit'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('User Details'),
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: name.isEmpty
+            ? const Center(child: Text('No data available'))
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Name: $name $lastName',
+                      style: const TextStyle(fontSize: 18)),
+                  Text('Email: $email', style: const TextStyle(fontSize: 18)),
+                  Text('Phone: $phone', style: const TextStyle(fontSize: 18)),
+                ],
+              ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: showUserFormDialog,
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
