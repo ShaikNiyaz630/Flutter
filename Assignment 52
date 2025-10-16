@@ -1,0 +1,93 @@
+Question 19: Develop a Flutter application that follows the Model-View-ViewModel (MVVM) pattern and has similar functionality to the default counter app in Flutter. 
+Source Code :
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+void main() {
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => CounterViewModel(),
+      child: const MyApp(),
+    ),
+  );
+}
+
+/// MyApp: Root of the app
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: CounterScreen(),
+    );
+  }
+}
+
+/// Counter Model
+class Counter {
+  int value;
+
+  Counter({this.value = 0});
+}
+
+/// Counter ViewModel
+class CounterViewModel extends ChangeNotifier {
+  Counter _counter = Counter();
+
+  int get counter => _counter.value;
+
+  void increment() {
+    _counter.value++;
+    notifyListeners();
+  }
+
+  void reset() {
+    _counter.value = 0;
+    notifyListeners();
+  }
+}
+
+/// Counter Screen (View)
+class CounterScreen extends StatelessWidget {
+  const CounterScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final counterVM = Provider.of<CounterViewModel>(context);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('MVVM Counter App')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'You have pushed the button this many times:',
+              style: TextStyle(fontSize: 18),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              '${counterVM.counter}',
+              style: const TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: counterVM.reset,
+              child: const Text('Reset'),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: counterVM.increment,
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
