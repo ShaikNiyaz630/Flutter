@@ -1,0 +1,72 @@
+Question 8: Create a simple Provider that provides a counter value and a button to increment the counter. Display the counter value in another widget.
+Source Code :
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+// Step 1: Create the Provider class
+class CounterProvider extends ChangeNotifier {
+  int _count = 0;
+
+  int get count => _count;
+
+  void increment() {
+    _count++;
+    notifyListeners();
+  }
+}
+
+void main() {
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => CounterProvider(),
+      child: const MyApp(),
+    ),
+  );
+}
+
+// Step 2: Root app widget
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: HomeScreen(),
+    );
+  }
+}
+
+// Step 3: Home screen with button
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final counterProvider = Provider.of<CounterProvider>(context, listen: false);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Provider Counter Example')),
+      body: const Center(child: CounterDisplayWidget()), // separate widget for display
+      floatingActionButton: FloatingActionButton(
+        onPressed: counterProvider.increment,
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+// Step 4: Display widget for showing counter value
+class CounterDisplayWidget extends StatelessWidget {
+  const CounterDisplayWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final count = Provider.of<CounterProvider>(context).count;
+
+    return Text(
+      'Counter Value: $count',
+      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    );
+  }
+}
