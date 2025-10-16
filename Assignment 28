@@ -1,0 +1,76 @@
+Question 4: Show a gif in UI that is based on a timer. If the timer is equal and less than 15 seconds then show the gif else display a message like running time has been over. How will you solve this problem statement? 
+Hint 1:- Use futur.delayed for the duration
+Hint 2:- Use a flag based on time and add logic to rendering the gif and text.
+
+Source Code : 
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const TimerGifApp());
+}
+
+class TimerGifApp extends StatelessWidget {
+  const TimerGifApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: TimerGifScreen(),
+    );
+  }
+}
+
+class TimerGifScreen extends StatefulWidget {
+  const TimerGifScreen({super.key});
+
+  @override
+  State<TimerGifScreen> createState() => _TimerGifScreenState();
+}
+
+class _TimerGifScreenState extends State<TimerGifScreen> {
+  bool isTimeOver = false; // Flag for showing/hiding GIF
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Step 3: Start 15-second timer
+    Future.delayed(const Duration(seconds: 15), () {
+      setState(() {
+        isTimeOver = true;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Timer-based GIF Display'),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: isTimeOver
+            ? const Text(
+                'Running time has been over!',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.network(
+                    'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif', // Example online GIF
+                    height: 200,
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Timer running... (15 seconds)',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+}
