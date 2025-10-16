@@ -1,0 +1,91 @@
+Question 10: Create a Provider that provides a counter value and a function to reset the counter to zero. Display the counter value in another widget and use a button to reset the counter.
+Source Code :
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+// Step 1: Provider class
+class CounterProvider extends ChangeNotifier {
+  int _count = 0;
+
+  int get count => _count;
+
+  void increment() {
+    _count++;
+    notifyListeners();
+  }
+
+  void reset() {
+    _count = 0;
+    notifyListeners();
+  }
+}
+
+void main() {
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => CounterProvider(),
+      child: const MyApp(),
+    ),
+  );
+}
+
+// Step 2: App Root
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: CounterScreen(),
+    );
+  }
+}
+
+// Step 3: Screen with increment & reset
+class CounterScreen extends StatelessWidget {
+  const CounterScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final counterProvider = Provider.of<CounterProvider>(context, listen: false);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Provider Counter Reset Example')),
+      body: const Center(child: CounterDisplayWidget()),
+
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: 'increment',
+            onPressed: counterProvider.increment,
+            child: const Icon(Icons.add),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton(
+            heroTag: 'reset',
+            onPressed: counterProvider.reset,
+            backgroundColor: Colors.red,
+            child: const Icon(Icons.refresh),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Step 4: Widget to display counter
+class CounterDisplayWidget extends StatelessWidget {
+  const CounterDisplayWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final count = Provider.of<CounterProvider>(context).count;
+
+    return Text(
+      'Counter Value: $count',
+      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    );
+  }
+}
