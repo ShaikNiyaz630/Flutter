@@ -1,0 +1,279 @@
+Question 20: Implement a Flutter application that resembles the functionality of the "GET IT DONE" app, with the added feature of storing data on Firebase and incorporating email and password authentication. 
+
+Source Code :
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthService()),
+        ChangeNotifierProvider(create: (_) => TodoViewModel()),
+      ],
+      child: const MyApp(),
+    ),
+  );
+}
+
+/// Root App
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: AuthWrapper(),
+    );
+  }
+}
+
+/// Wrapper to handle auth state
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = Provider.of<AuthService>(context);
+    return StreamBuilder<User?>(
+      stream: auth.authStateChanges,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        } else if (snapshot.hasData) {
+          return const HomeScreen();
+        } else {
+          return const LoginScreen();
+        }
+      },
+    );
+  }
+}
+
+/// ======================
+/// AUTH SERVICE
+/// ======================
+class AuthService extends ChangeNotifier {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  Future<void> signUp(String email, String password) async {
+    await _auth.createUserWithEmailAndPassword(
+        email: email, password: password);
+  }
+
+  Future<void> signIn(String email, String password) async {
+    await _auth.signInWithEmailAndPassword(email: email, password: password);
+  }
+
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
+}
+
+/// ======================
+/// TODO MODEL & VIEWMODEL
+/// ======================
+class Todo {
+  String id;
+  String title;
+  Todo({required this.id, required this.title});
+}
+
+class TodoViewModel extends ChangeNotifier {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  List<Todo> todos = [];
+
+  Future<void> fetchTodos(String userId) async {
+    final snapshot = await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('todos')
+        .get();
+    todos = snapshot.docs
+        .map((doc) => Todo(id: doc.id, title: doc['title']))
+        .toList();
+    notifyListeners();
+  }
+
+  Future<void> addTodo(String userId, String title) async {
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('todos')
+        .add({'title': title});
+    await fetchTodos(userId);
+  }
+
+  Future<void> deleteTodo(String userId, String todoId) async {
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('todos')
+        .doc(todoId)
+        .delete();
+    await fetchTodos(userId);
+  }
+}
+
+/// ======================
+/// LOGIN SCREEN
+/// ======================
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _email = TextEditingController();
+  final TextEditingController _password = TextEditingController();
+  bool _isLogin = true;
+  bool _isLoading = false;
+
+  void _submit() async {
+    setState(() => _isLoading = true);
+    final auth = Provider.of<AuthService>(context, listen: false);
+    try {
+      if (_isLogin) {
+        await auth.signIn(_email.text, _password.text);
+      } else {
+        await auth.signUp(_email.text, _password.text);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(_isLogin ? 'Login' : 'Sign Up')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextFormField(
+              controller: _email,
+              decoration: const InputDecoration(labelText: 'Email'),
+            ),
+            TextFormField(
+              controller: _password,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Password'),
+            ),
+            const SizedBox(height: 20),
+            _isLoading
+                ? const CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: _submit,
+                    child: Text(_isLogin ? 'Login' : 'Sign Up'),
+                  ),
+            TextButton(
+              onPressed: () => setState(() => _isLogin = !_isLogin),
+              child: Text(_isLogin
+                  ? 'Create a new account'
+                  : 'Already have an account? Login'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// ======================
+/// HOME SCREEN
+/// ======================
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final TextEditingController _todoController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final todoVM = Provider.of<TodoViewModel>(context, listen: false);
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+    todoVM.fetchTodos(userId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = Provider.of<AuthService>(context);
+    final todoVM = Provider.of<TodoViewModel>(context);
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('GET IT DONE'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => auth.signOut(),
+          )
+        ],
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _todoController,
+                    decoration:
+                        const InputDecoration(labelText: 'Add a task'),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () async {
+                    if (_todoController.text.isNotEmpty) {
+                      await todoVM.addTodo(userId, _todoController.text);
+                      _todoController.clear();
+                    }
+                  },
+                )
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: todoVM.todos.length,
+              itemBuilder: (context, index) {
+                final todo = todoVM.todos[index];
+                return ListTile(
+                  title: Text(todo.title),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () => todoVM.deleteTodo(userId, todo.id),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
