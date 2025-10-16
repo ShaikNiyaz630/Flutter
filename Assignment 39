@@ -1,0 +1,132 @@
+Question 5: Create a Flutter program to fetch all image links and accompanying text from a Firestore collection and present them in cards with a left-to-right slide transition effect. Ensure the cards are scrollable.
+Source code :
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: PostsScreen(),
+    );
+  }
+}
+
+class PostsScreen extends StatelessWidget {
+  const PostsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Firestore Posts')),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('posts').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text('No posts found'));
+          }
+
+          final docs = snapshot.data!.docs;
+
+          return ListView.builder(
+            itemCount: docs.length,
+            itemBuilder: (context, index) {
+              final doc = docs[index];
+              return SlideCard(
+                imageUrl: doc['imageUrl'],
+                title: doc['title'],
+                index: index,
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class SlideCard extends StatefulWidget {
+  final String imageUrl;
+  final String title;
+  final int index;
+
+  const SlideCard({
+    super.key,
+    required this.imageUrl,
+    required this.title,
+    required this.index,
+  });
+
+  @override
+  State<SlideCard> createState() => _SlideCardState();
+}
+
+class _SlideCardState extends State<SlideCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(-1, 0), // Slide from left
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    // Add staggered animation effect
+    Future.delayed(Duration(milliseconds: widget.index * 100), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SlideTransition(
+      position: _slideAnimation,
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Image.network(widget.imageUrl, fit: BoxFit.cover),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                widget.title,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
