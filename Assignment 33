@@ -1,0 +1,122 @@
+Question 9: Create a Provider that provides a list of strings and a function to add new strings to the list. Display the list in another widget.
+Source Code :
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+// Step 1: Create the Provider class
+class StringListProvider extends ChangeNotifier {
+  final List<String> _items = [];
+
+  List<String> get items => _items;
+
+  void addItem(String newItem) {
+    _items.add(newItem);
+    notifyListeners();
+  }
+}
+
+void main() {
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => StringListProvider(),
+      child: const MyApp(),
+    ),
+  );
+}
+
+// Step 2: Main App
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: StringListScreen(),
+    );
+  }
+}
+
+// Step 3: Screen with Input and List
+class StringListScreen extends StatefulWidget {
+  const StringListScreen({super.key});
+
+  @override
+  State<StringListScreen> createState() => _StringListScreenState();
+}
+
+class _StringListScreenState extends State<StringListScreen> {
+  final TextEditingController textController = TextEditingController();
+
+  void addNewItem(BuildContext context) {
+    final provider = Provider.of<StringListProvider>(context, listen: false);
+    final text = textController.text.trim();
+
+    if (text.isNotEmpty) {
+      provider.addItem(text);
+      textController.clear();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Provider List Example')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // Input Field + Button
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: textController,
+                    decoration: const InputDecoration(
+                      labelText: 'Enter item',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: () => addNewItem(context),
+                  child: const Text('Add'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Step 4: Display the list in another widget
+            const Expanded(child: StringListDisplayWidget()),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Step 5: Widget that listens to Provider changes
+class StringListDisplayWidget extends StatelessWidget {
+  const StringListDisplayWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final items = Provider.of<StringListProvider>(context).items;
+
+    return items.isEmpty
+        ? const Center(child: Text('No items added yet'))
+        : ListView.builder(
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 5),
+                child: ListTile(
+                  leading: CircleAvatar(child: Text('${index + 1}')),
+                  title: Text(items[index]),
+                ),
+              );
+            },
+          );
+  }
+}
