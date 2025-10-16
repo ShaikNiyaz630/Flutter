@@ -1,0 +1,97 @@
+Question 18: Create a Flutter application that retrieves and displays user comments from the server using the API "https://jsonplaceholder.typicode.com/comments". The comments should include the name and email of each user. 
+Source Code :
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: CommentsScreen(),
+    );
+  }
+}
+
+class CommentsScreen extends StatefulWidget {
+  const CommentsScreen({super.key});
+
+  @override
+  State<CommentsScreen> createState() => _CommentsScreenState();
+}
+
+class _CommentsScreenState extends State<CommentsScreen> {
+  late Future<List<Comment>> _commentsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _commentsFuture = fetchComments();
+  }
+
+  Future<List<Comment>> fetchComments() async {
+    final response = await http.get(
+      Uri.parse('https://jsonplaceholder.typicode.com/comments'),
+    );
+
+    if (response.statusCode == 200) {
+      List jsonList = json.decode(response.body);
+      return jsonList.map((json) => Comment.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load comments');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('User Comments')),
+      body: FutureBuilder<List<Comment>>(
+        future: _commentsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No comments found'));
+          } else {
+            final comments = snapshot.data!;
+            return ListView.builder(
+              itemCount: comments.length,
+              itemBuilder: (context, index) {
+                final comment = comments[index];
+                return ListTile(
+                  leading: const Icon(Icons.comment),
+                  title: Text(comment.name),
+                  subtitle: Text(comment.email),
+                );
+              },
+            );
+          }
+        },
+      ),
+    );
+  }
+}
+
+class Comment {
+  final String name;
+  final String email;
+
+  Comment({required this.name, required this.email});
+
+  factory Comment.fromJson(Map<String, dynamic> json) {
+    return Comment(
+      name: json['name'],
+      email: json['email'],
+    );
+  }
+}
