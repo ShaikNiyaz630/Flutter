@@ -1,0 +1,136 @@
+Question 7: Create a Form with two TextFormFields that require user input and a button to submit the form. Use the Provider package to pass the form data to another widget.
+Source Code :
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+void main() {
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => FormDataProvider(),
+      child: const MyApp(),
+    ),
+  );
+}
+
+// Step 1: Provider class
+class FormDataProvider extends ChangeNotifier {
+  String name = '';
+  String email = '';
+
+  void setFormData(String newName, String newEmail) {
+    name = newName;
+    email = newEmail;
+    notifyListeners();
+  }
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: FormScreen(),
+    );
+  }
+}
+
+// Step 2: Form screen
+class FormScreen extends StatefulWidget {
+  const FormScreen({super.key});
+
+  @override
+  State<FormScreen> createState() => _FormScreenState();
+}
+
+class _FormScreenState extends State<FormScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+
+  void submitForm() {
+    if (_formKey.currentState!.validate()) {
+      final provider =
+          Provider.of<FormDataProvider>(context, listen: false);
+      provider.setFormData(nameController.text, emailController.text);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const DisplayScreen()),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('User Form'),
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Enter your name',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) =>
+                    value!.isEmpty ? 'Please enter your name' : null,
+              ),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Enter your email',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) =>
+                    value!.isEmpty ? 'Please enter your email' : null,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: submitForm,
+                child: const Text('Submit'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Step 3: Display screen (uses Provider data)
+class DisplayScreen extends StatelessWidget {
+  const DisplayScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = Provider.of<FormDataProvider>(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Submitted Data'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Name: ${provider.name}',
+                style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 10),
+            Text('Email: ${provider.email}',
+                style: const TextStyle(fontSize: 20)),
+          ],
+        ),
+      ),
+    );
+  }
+}
